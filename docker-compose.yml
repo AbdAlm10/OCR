@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      OCR_MODEL: sherif1313/Arabic-English-handwritten-OCR-v3
+      OCR_DEVICE: ${OCR_DEVICE:-auto}
+      OCR_MAX_NEW_TOKENS: "1024"
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      HF_HOME: /cache/huggingface
+    volumes:
+      - hf-cache:/cache/huggingface
+    # Uncomment for NVIDIA GPU on Linux servers:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  web:
+    build:
+      context: ./web
+      args:
+        BACKEND_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL: http://api:8000
+      NEXT_PUBLIC_API_URL: ""
+    depends_on:
+      - api
+
+volumes:
+  hf-cache:

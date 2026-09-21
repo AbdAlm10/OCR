@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0e1419;
+  --ink-soft: #1a242e;
+  --mist: #d4dbe3;
+  --mist-dim: #9aa7b5;
+  --paper: #e8eef4;
+  --teal: #3a7d7a;
+  --teal-bright: #4f9e9a;
+  --line: rgba(212, 219, 227, 0.14);
+  --glow: rgba(79, 158, 154, 0.22);
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-figtree);
+  --font-arabic: var(--font-naskh);
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-mist: var(--mist);
+  --color-mist-dim: var(--mist-dim);
+  --color-paper: var(--paper);
+  --color-teal: var(--teal);
+  --color-teal-bright: var(--teal-bright);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-arabic: var(--font-arabic);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--mist);
+  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--ink);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--teal-bright) 45%, transparent);
+  color: white;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.05);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-rise-delay {
+  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(232, 238, 244, 0.12) 40%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(58, 125, 122, 0.28), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(26, 36, 46, 0.9), transparent 50%),
+    radial-gradient(ellipse 40% 35% at 8% 70%, rgba(79, 158, 154, 0.12), transparent 45%),
+    linear-gradient(165deg, #0b1015 0%, #121a22 48%, #0e1419 100%);
+}
+
+.atmosphere::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(79, 158, 154, 0.16), transparent 28%),
+    radial-gradient(circle at 70% 55%, rgba(154, 167, 181, 0.08), transparent 32%);
+  animation: drift 18s ease-in-out infinite;
+}
+
+.atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.dropzone {
+  transition:
+    border-color 0.35s ease,
+    background-color 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.35s ease;
+}
+
+.dropzone:hover,
+.dropzone[data-active="true"] {
+  border-color: color-mix(in oklab, var(--teal-bright) 70%, var(--mist));
+  background: color-mix(in oklab, var(--teal) 12%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--teal-bright) 25%, transparent),
+    0 24px 80px -30px var(--glow);
+  transform: translateY(-2px);
+}
+
+.result-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.result-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--mist-dim) 45%, transparent);
+  border-radius: 999px;
+}
