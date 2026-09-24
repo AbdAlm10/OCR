@@ -29,32 +29,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
 
 const FALLBACK_MODELS: ModelInfo[] = [
   {
-    id: "ocr-v3",
-    label: "Arabic-English OCR v3",
-    description: "Qwen2.5-VL-3B fine-tune — Arabic + English pages",
-    hf_id: "sherif1313/Arabic-English-handwritten-OCR-v3",
-    languages: ["ar", "en"],
-    note: "Good for full pages and bilingual handwriting.",
-    ready: false,
-    active: false,
-  },
-  {
-    id: "warraq",
-    label: "Warraq Arabic HTR 7B",
-    description: "QLoRA on Fanar — strong on real phone photos & forms",
-    hf_id: "mabdulaziz499/Warraq-Arabic-HTR-7B",
-    languages: ["ar"],
-    note: "Best on single-line crops; full pages still work but may be slower/noisier.",
-    ready: false,
-    active: false,
-  },
-  {
-    id: "fanar-htr",
-    label: "Fanar HTR 7B (best CER)",
-    description: "Top open KHATT score ~3.77% CER — generalist Arabic handwriting",
-    hf_id: "mabdulaziz499/arabic-htr-fanar-7b-lora",
-    languages: ["ar"],
-    note: "Best verified line-level accuracy. Prefer single-line crops.",
+    id: "trocr-handwritten",
+    label: "TrOCR Handwritten",
+    description: "Microsoft TrOCR base — handwritten English (IAM)",
+    hf_id: "microsoft/trocr-base-handwritten",
+    languages: ["en"],
+    note: "Best on single-line handwriting crops.",
     ready: false,
     active: false,
   },
@@ -66,8 +46,7 @@ export default function OcrStudio() {
   const [preview, setPreview] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [dragOver, setDragOver] = useState(false);
-  const [language, setLanguage] = useState<"ar" | "en">("ar");
-  const [modelId, setModelId] = useState("ocr-v3");
+  const [modelId, setModelId] = useState("trocr-handwritten");
   const [models, setModels] = useState<ModelInfo[]>(FALLBACK_MODELS);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +119,7 @@ export default function OcrStudio() {
 
     const body = new FormData();
     body.append("file", file);
-    body.append("language", language);
+    body.append("language", "en");
     body.append("model", modelId);
 
     try {
@@ -180,8 +159,7 @@ export default function OcrStudio() {
     } catch (err) {
       let message = err instanceof Error ? err.message : "Something went wrong.";
       if (err instanceof Error && err.name === "AbortError") {
-        message =
-          "OCR timed out. On CPU large models are very slow — try a smaller crop or a GPU.";
+        message = "OCR timed out. Try a smaller single-line crop or a GPU.";
       } else if (
         message.includes("Failed to fetch") ||
         message.includes("NetworkError") ||
@@ -193,7 +171,7 @@ export default function OcrStudio() {
       setError(message);
       setStage("error");
     }
-  }, [file, language, modelId]);
+  }, [file, modelId]);
 
   const downloadTxt = useCallback(() => {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -219,9 +197,6 @@ export default function OcrStudio() {
     if (inputRef.current) inputRef.current.value = "";
   }, []);
 
-  const dir = useMemo(() => (language === "ar" ? "rtl" : "ltr"), [language]);
-  const arabicOnlyModel = modelId === "warraq" || modelId === "fanar-htr";
-
   return (
     <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-10 sm:px-8 sm:py-14">
       <header className="animate-rise mb-10 text-center sm:mb-14">
@@ -232,7 +207,7 @@ export default function OcrStudio() {
           Katib
         </h1>
         <p className="animate-rise-delay mx-auto mt-5 max-w-md text-base text-[var(--mist-dim)] sm:text-lg">
-          Drop a handwritten page. Choose a model. Download the text.
+          Drop a handwritten line. Extract the text. Download a `.txt`.
         </p>
       </header>
 
@@ -247,11 +222,7 @@ export default function OcrStudio() {
           <select
             id="model-select"
             value={modelId}
-            onChange={(e) => {
-              const next = e.target.value;
-              setModelId(next);
-              if (next === "warraq" || next === "fanar-htr") setLanguage("ar");
-            }}
+            onChange={(e) => setModelId(e.target.value)}
             disabled={stage === "working"}
             className="w-full appearance-none rounded-[2px] border border-[var(--line)] bg-[var(--ink-soft)] px-4 py-3 text-[var(--paper)] outline-none transition focus:border-[var(--teal-bright)]"
           >
@@ -325,33 +296,6 @@ export default function OcrStudio() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                {!arabicOnlyModel && (
-                  <div className="inline-flex overflow-hidden rounded-[2px] border border-[var(--line)]">
-                    <button
-                      type="button"
-                      onClick={() => setLanguage("ar")}
-                      className={`px-3 py-2 text-sm transition ${
-                        language === "ar"
-                          ? "bg-[var(--teal)] text-white"
-                          : "text-[var(--mist-dim)] hover:text-[var(--paper)]"
-                      }`}
-                    >
-                      عربي
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLanguage("en")}
-                      className={`px-3 py-2 text-sm transition ${
-                        language === "en"
-                          ? "bg-[var(--teal)] text-white"
-                          : "text-[var(--mist-dim)] hover:text-[var(--paper)]"
-                      }`}
-                    >
-                      English
-                    </button>
-                  </div>
-                )}
-
                 <button
                   type="button"
                   onClick={runOcr}
@@ -390,7 +334,7 @@ export default function OcrStudio() {
               {stage === "working" && (
                 <p className="text-sm text-[var(--mist-dim)]">
                   Loading / running <span className="text-[var(--paper)]">{selectedModel?.label}</span>
-                  … First use of a model downloads weights. On CPU this can take a long time.
+                  … First use downloads weights from Hugging Face.
                 </p>
               )}
 
@@ -403,12 +347,8 @@ export default function OcrStudio() {
               {stage === "done" && (
                 <>
                   <div
-                    dir={dir}
-                    className={`result-scroll max-h-[420px] flex-1 overflow-y-auto whitespace-pre-wrap text-[1.05rem] leading-8 text-[var(--paper)] ${
-                      language === "ar" || arabicOnlyModel
-                        ? "font-[family-name:var(--font-naskh)]"
-                        : "font-[family-name:var(--font-figtree)]"
-                    }`}
+                    dir="ltr"
+                    className="result-scroll max-h-[420px] flex-1 overflow-y-auto whitespace-pre-wrap font-[family-name:var(--font-figtree)] text-[1.05rem] leading-8 text-[var(--paper)]"
                   >
                     {text || "No text detected."}
                   </div>
@@ -423,9 +363,7 @@ export default function OcrStudio() {
 
               {(stage === "ready" || stage === "idle") && !error && (
                 <p className="text-sm text-[var(--mist-dim)]">
-                  {arabicOnlyModel
-                    ? "This model works best on a single handwritten line crop."
-                    : "Choose Arabic or English prompt, then extract."}
+                  Works best on a single handwritten English line crop.
                 </p>
               )}
             </div>
@@ -434,7 +372,7 @@ export default function OcrStudio() {
       </main>
 
       <footer className="mt-12 text-center text-xs text-[var(--mist-dim)]/80">
-        Local multi-model OCR · switch anytime above
+        Local TrOCR · microsoft/trocr-base-handwritten
       </footer>
     </div>
   );

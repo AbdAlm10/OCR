@@ -42,7 +42,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         except Exception:
             logger.exception(
                 "Model preload failed — first request will retry. "
-                "Install torch/transformers/peft and ensure Hugging Face access."
+                "Install torch/transformers and ensure Hugging Face access."
             )
     else:
         logger.info(
@@ -55,8 +55,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="Katib OCR",
-    description="Arabic–English handwritten OCR API (multi-model)",
-    version="1.1.0",
+    description="Handwritten OCR API powered by microsoft/trocr-base-handwritten",
+    version="1.2.0",
     lifespan=lifespan,
 )
 
@@ -102,7 +102,7 @@ def list_models() -> dict:
 @app.post("/api/ocr")
 async def ocr(
     file: UploadFile = File(...),
-    language: str = Form(default="ar"),
+    language: str = Form(default="en"),
     model: str = Form(default=""),
 ) -> dict:
     if file.content_type and file.content_type.lower() not in ALLOWED_TYPES:
@@ -160,7 +160,7 @@ async def ocr(
 @app.post("/api/ocr.txt", response_class=PlainTextResponse)
 async def ocr_plain(
     file: UploadFile = File(...),
-    language: str = Form(default="ar"),
+    language: str = Form(default="en"),
     model: str = Form(default=""),
 ) -> str:
     result = await ocr(file=file, language=language, model=model)
